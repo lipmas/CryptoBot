@@ -10,7 +10,7 @@ using Newtonsoft.Json.Linq;
 using System.Security.Cryptography;
 
 using CryptoBot.Constants;
-using CryptoBot;
+using CryptoBot.Utility;
 
 namespace CryptoBot.ExchangeApi.Poloniex {
 
@@ -23,7 +23,8 @@ namespace CryptoBot.ExchangeApi.Poloniex {
      * Implements public data api calls using GET request
      * Implements private/authenticated trade requests using POST request
      * Currently only implements a small subset of the api requests
-     * TODO use Poloniex's push api through websockets to receive updates 
+     * TODO: use Poloniex's push api through websockets to receive market tick updates instead of polling
+     * TODO: add caching/flood protection if many bots will be using the same exchange object
      */
     public class PoloniexApi {
         public int nonce;
@@ -38,8 +39,11 @@ namespace CryptoBot.ExchangeApi.Poloniex {
             api_key = secrets["API_KEY"];
             hmac = new HMACSHA512(Encoding.UTF8.GetBytes(api_secret));
 
+            //recover previous last nonce from file
             if(File.Exists(PoloniexConfig.nonceFile)){
-                nonce =  Convert.ToInt32(Util.readKeyValuesFromFile(PoloniexConfig.nonceFile)["nonce"]);
+                nonce =  Convert.ToInt32(Util.readKeyValuesFromFile(PoloniexConfig.nonceFile)["poloniex_nonce"]);
+            }else{
+                nonce = 1;
             }
         }
 
@@ -48,7 +52,7 @@ namespace CryptoBot.ExchangeApi.Poloniex {
         public string getNonce() {
             var last_nonce = nonce;
             nonce++;
-            File.WriteAllText(PoloniexConfig.nonceFile, "nonce=" + nonce.ToString());
+            File.WriteAllText(PoloniexConfig.nonceFile, "poloniex_nonce=" + nonce.ToString());
             return last_nonce.ToString();
         }
         private string makeRequestUrl(string command, Dictionary<string, string> args=null) {
@@ -61,7 +65,7 @@ namespace CryptoBot.ExchangeApi.Poloniex {
             }
             return url;
         }
-        private JObject makePublicRequest(string uri) {
+        private string makePublicRequest(string uri) {
             var request = WebRequest.Create(new Uri(uri));
             if(request == null) {
                 throw new Exception("Invalid request: " + uri);
@@ -70,8 +74,7 @@ namespace CryptoBot.ExchangeApi.Poloniex {
                 var response = request.GetResponse();
                 var stream = response.GetResponseStream();
                 var streamReader = new StreamReader(stream);
-                JObject jsonObj = JObject.Parse(streamReader.ReadToEnd());
-                return jsonObj;
+                return streamReader.ReadToEnd();
             }catch(Exception e) {
                 Console.WriteLine(e.Message);
                 throw new PoloniexApiException("Simple Request Failed: " + uri);
@@ -106,7 +109,6 @@ namespace CryptoBot.ExchangeApi.Poloniex {
                 var response = (HttpWebResponse)request.GetResponse();
                 var responseString = new StreamReader(response.GetResponseStream()).ReadToEnd();
                 JObject jsonObj = JObject.Parse(responseString);
-                //Console.WriteLine(responseString);                
                 return jsonObj;
             }catch(Exception e) {
                 throw new PoloniexApiException("Private request failed: " + e.Message);
@@ -120,8 +122,8 @@ namespace CryptoBot.ExchangeApi.Poloniex {
         public JObject getTickers() {
             string url = makeRequestUrl("returnTicker");
             var res = makePublicRequest(url);
-            //Console.WriteLine(res);
-            return res;
+            JObject jsonObj = JObject.Parse(res);
+            return jsonObj;
         }
 
 		public JObject getOrderBook(string ticker, int depth=10) {
@@ -130,11 +132,23 @@ namespace CryptoBot.ExchangeApi.Poloniex {
                 {"depth", depth.ToString()}
             };
             string url = makeRequestUrl("returnOrderBook", args);
-
 			var res = makePublicRequest(url);
-			//Console.WriteLine(res);
-			return res;
+            JObject jsonObj = JObject.Parse(res);
+			return jsonObj;
 		}
+
+        public JArray getTradeHistory(string ticker, int start, int end) {
+            Dictionary<string,string> args = new Dictionary<string,string>(){
+                {"currencyPair", ticker},
+                {"start", start.ToString()},
+                {"end", end.ToString()}
+            };
+            string url = makeRequestUrl("returnTradeHistory", args);
+			var res = makePublicRequest(url);
+            JArray jsonArr = JArray.Parse(res);
+			return jsonArr;
+
+        }
         public bool placeBuyOrder(string currencyPair, decimal rate, decimal amount, bool immediateOrCancel=false, bool postOnly=false) {
             var args = new Dictionary<string, string> {
                 {"currencyPair", currencyPair},

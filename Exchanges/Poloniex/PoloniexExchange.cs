@@ -1,22 +1,43 @@
 using System;
 using System.Linq;
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
 
-namespace CryptoBot.ExchangeApi.Poloniex {
+using CryptoBot.Utility;
 
+namespace CryptoBot.ExchangeApi.Poloniex {
     /*
-     * Wrapper for the PoloniexApi to implement the generic exchange class
+     * Wrapper class of the PoloniexApi to implement the interface of a generic exchange class
      */
     public class PoloniexExchange : Exchange {
 
         private PoloniexApi api;
 
-        public PoloniexExchange(List<string> _supportedCoins) {
+        public PoloniexExchange(List<string> _supportedCoins) : base("Poloniex") {
             supportedCoins = _supportedCoins;
             api = new PoloniexApi();
             getSupportedMarkets();
+        }
+
+        public override void getTradeHistory(string marketName, int secondsBack) {
+            var currentTime = DateTime.UtcNow;
+            var end = Util.getUnixTimestamp(currentTime);
+            var start = end - secondsBack;
+
+            var res = api.getTradeHistory(marketName, start, end);
+            var trades = new List<Trade>();
+            foreach(var tkn in res){
+                var parsedTimestamp = DateTime.ParseExact((string)tkn["date"], "yyyy-MM-dd HH:mm:ss", null);
+                var unixTimeStamp = Util.getUnixTimestamp(parsedTimestamp);
+                var trade = new Trade((decimal)tkn["amount"], (decimal)tkn["rate"], unixTimeStamp);
+                //trade.printDetails();
+                trades.Add(trade);
+            }
+            tradeHistory.historicalTrades = trades;
+            tradeHistory.startTime = start;
+            tradeHistory.endTime = end;
         }
 
         public override void updateMarketPrices() {
@@ -73,7 +94,6 @@ namespace CryptoBot.ExchangeApi.Poloniex {
         public override bool placeSellLimitOrder(string marketName, decimal rate, decimal amount) {
             return api.placeSellOrder(marketName, rate, amount, false, false);
         }
-
         public override bool getBalances() {
             try {
                 JObject res = api.getBalances();

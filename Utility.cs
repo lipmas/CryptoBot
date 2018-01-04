@@ -3,7 +3,7 @@ using System.Text;
 using System.IO;
 using System.Collections.Generic;
 
-namespace CryptoBot {
+namespace CryptoBot.Utility {
     public class Util {
         public static string ByteArrayToString(byte[] ba) {
             StringBuilder hex = new StringBuilder(ba.Length * 2);
@@ -19,6 +19,10 @@ namespace CryptoBot {
                 dict[arr[0]] = arr[1];
             }
             return dict;
+        }
+        public static int getUnixTimestamp(DateTime dt) {
+            Int32 unixTimestamp = (Int32)(dt.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
+            return unixTimestamp;
         }
     }
 }

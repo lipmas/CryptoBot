@@ -2,19 +2,22 @@ using System;
 using System.Collections.Generic;
 
 namespace CryptoBot.ExchangeApi {
-
     /*
      * Abstract exchange class that tracks many different markets
      * and exposes a common interface for interacting with the exchange data
      */
     public abstract class Exchange {
+
+        protected string exchangeName;
         protected List<String> supportedCoins;
         protected Dictionary<string, Market> markets =  new Dictionary<string, Market>();
         protected List<string> marketNames = new List<string>();
-
+        protected TradeHistory tradeHistory = new TradeHistory();
         protected Dictionary<string, decimal> balances;
 
-        public Exchange() {}
+        public Exchange(string name) {
+            exchangeName = name;
+        }
         public List<string> getMarketNames() {
             return marketNames;
         }
@@ -35,9 +38,10 @@ namespace CryptoBot.ExchangeApi {
                 printMarket(bal.Key + ": " + bal.Value);
             }
         }
-        //exchanges must implement these updates through the appropriate API calls
+        //specific exchanges must implement these data updates through the appropriate API calls
         public abstract void updateMarketPrices();
         public abstract void updateMarketOrderBook(string marketName, int depth);
+        public abstract void getTradeHistory(string marketName, int secondsBack);
         public abstract bool placeBuyLimitOrder(string marketName, decimal rate, decimal amount);
         public abstract bool placeSellLimitOrder(string marketName, decimal rate, decimal amount);
         public abstract bool getBalances();

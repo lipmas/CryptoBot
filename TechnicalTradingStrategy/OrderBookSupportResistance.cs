@@ -6,17 +6,11 @@ using CryptoBot.ExchangeApi;
 
 namespace CryptoBot.TechnicalTradingStrategy  {
     /*
-     * 
-     */
+     * Very simplistic approximation of support/resistance levels based on order book snapshot
+     * uses some parameterized heuristics to determine which price if any may be a support/resistance level
+     * this is very simple strategy that doesnt take into account fast changing order books and is unlikely to be profitable
+    */
     public class OrderBookSupportResistance : ITechnicalTradingStrategy {
-
-
-        /*
-         * findSupportLevel and findResistanceLevel functions
-         * use some parameterized heuristics to determine a good
-         * nearby support or resistance level based on the available order book
-         * this is very simple strategy and is very unlikely to be profitable
-        */
         public decimal? findSupportLevel(Exchange exch, string marketName) {
             exch.updateMarketOrderBook(marketName, TradingParameters.orderBookDepth);
             //reverse the list because bids are presorted by largest->smallest

@@ -11,7 +11,7 @@ using CryptoBot.TechnicalTradingStrategy;
 namespace CryptoBot {
     /*
      * Technical trading bot that uses a technical trading strategy to find support/resistance levels
-     * for a particular currency pair market and then exeutes trades based on those levels
+     * for a particular currency pair market and then executes trades based on those levels
      */
     public class TechnicalTradingBot {
         private Exchange exch;
@@ -36,7 +36,7 @@ namespace CryptoBot {
             //for now use OrderBook strategy
             var strategy = new OrderBookSupportResistance();
 
-            //initialize strategy
+            //get initial strategy
             foreach(var name in exch.getMarketNames()) {
                 executeStrategy(strategy, name);
             }
@@ -106,7 +106,7 @@ namespace CryptoBot {
 
         public void executeTrade(string marketName, decimal price, bool isSupport) {
             //TODO: use the exch api to place orders/execute a trade
-            //how many orders to generate at what prices exactly can be determined
+            //how many orders to generate and at what prices exactly can be determined
             //by avaiable balances on the exchange, risk tolerance, fees, and other parameters
         }
     }
