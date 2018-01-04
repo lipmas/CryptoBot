@@ -4,37 +4,12 @@ using System.Collections.Generic;
 using CryptoBot.Constants;
 using CryptoBot.ExchangeApi;
 
-namespace CryptoBot.TradingStrategy {
-    public class OrderBookSupportResistance {
-        /*
-         * Aggregates the order book into a smaller set of price levels 
-         * aggSize: the number of buckets to divide the order book range by during aggregation
-         * assumes the quotes are sorted smallest->largest
-         */
-        public static List<Quote> consolidateOrderBook(List<Quote> quotes, decimal aggSize) {
-            decimal spread = quotes[quotes.Count-1].price - quotes[0].price;
-            decimal bucketSize = spread / aggSize;
-            decimal currBucket = quotes[0].price + bucketSize;
+namespace CryptoBot.TechnicalTradingStrategy  {
+    /*
+     * 
+     */
+    public class OrderBookSupportResistance : ITechnicalTradingStrategy {
 
-            decimal sum = 0;
-            var consolidatedQuotes = new List<Quote>();
-            for(int i=0; i<quotes.Count; i++) {
-                if(quotes[i].price > currBucket) {
-                    consolidatedQuotes.Add(new Quote(currBucket, sum));
-                    sum = 0;
-                    while(quotes[i].price > currBucket) {
-                        currBucket += bucketSize;
-                    }
-                    continue;
-                }
-                sum += quotes[i].qty;
-                //if this is last quote add it to the last consolidated quote bucket
-                if(i == quotes.Count-1) {
-                    consolidatedQuotes.Add(new Quote(currBucket, sum));
-                }
-            }
-            return consolidatedQuotes;
-        }
 
         /*
          * findSupportLevel and findResistanceLevel functions
@@ -42,9 +17,10 @@ namespace CryptoBot.TradingStrategy {
          * nearby support or resistance level based on the available order book
          * this is very simple strategy and is very unlikely to be profitable
         */
-
-        public static decimal? findSupportLevel(List<Quote> bids) {
+        public decimal? findSupportLevel(Exchange exch, string marketName) {
+            exch.updateMarketOrderBook(marketName, TradingParameters.orderBookDepth);
             //reverse the list because bids are presorted by largest->smallest
+            var bids = exch.getMarket(marketName).bids;
             List<Quote> reverseBids = new List<Quote>(bids);
             reverseBids.Reverse();
             var consolidatedQuotes = consolidateOrderBook(reverseBids, TradingParameters.aggSize);
@@ -76,7 +52,9 @@ namespace CryptoBot.TradingStrategy {
             return consolidatedQuotes[maxIndex].price;;
         }
 
-        public static decimal? findResitanceLevel(List<Quote> asks) {
+        public decimal? findResistanceLevel(Exchange exch, string marketName) {
+            exch.updateMarketOrderBook(marketName, TradingParameters.orderBookDepth);
+            var asks = exch.getMarket(marketName).asks;
             var consolidatedQuotes = consolidateOrderBook(asks, TradingParameters.aggSize);
 
             //find the largest qty bucket in the aggregated order book
@@ -104,6 +82,36 @@ namespace CryptoBot.TradingStrategy {
             }
             //consolidatedQuotes[maxIndex].printDetails();
             return consolidatedQuotes[maxIndex].price;;
+        }
+
+        /*
+         * Aggregates the order book into a smaller set of price levels 
+         * aggSize: the number of buckets to divide the order book range by during aggregation
+         * assumes the quotes are sorted smallest->largest
+         */
+        private static List<Quote> consolidateOrderBook(List<Quote> quotes, decimal aggSize) {
+            decimal spread = quotes[quotes.Count-1].price - quotes[0].price;
+            decimal bucketSize = spread / aggSize;
+            decimal currBucket = quotes[0].price + bucketSize;
+
+            decimal sum = 0;
+            var consolidatedQuotes = new List<Quote>();
+            for(int i=0; i<quotes.Count; i++) {
+                if(quotes[i].price > currBucket) {
+                    consolidatedQuotes.Add(new Quote(currBucket, sum));
+                    sum = 0;
+                    while(quotes[i].price > currBucket) {
+                        currBucket += bucketSize;
+                    }
+                    continue;
+                }
+                sum += quotes[i].qty;
+                //if this is last quote add it to the last consolidated quote bucket
+                if(i == quotes.Count-1) {
+                    consolidatedQuotes.Add(new Quote(currBucket, sum));
+                }
+            }
+            return consolidatedQuotes;
         }
     }
 }

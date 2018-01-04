@@ -12,6 +12,8 @@ namespace CryptoBot.ExchangeApi {
         protected Dictionary<string, Market> markets =  new Dictionary<string, Market>();
         protected List<string> marketNames = new List<string>();
 
+        protected Dictionary<string, decimal> balances;
+
         public Exchange() {}
         public List<string> getMarketNames() {
             return marketNames;
@@ -24,19 +26,21 @@ namespace CryptoBot.ExchangeApi {
             Console.WriteLine("{ name: " + market.name + ", " + "lastPrice: " + market.lastPrice );
         }
         public void printMarkets() {
-            Console.WriteLine("-----Market Update------");
             foreach(var market in markets) {
                 printMarket(market.Key);
+            } 
+        }
+        public void printBalances() {
+            foreach(var bal in balances) {
+                printMarket(bal.Key + ": " + bal.Value);
             }
-            Console.WriteLine("------------------------");
-            
         }
         //exchanges must implement these updates through the appropriate API calls
         public abstract void updateMarketPrices();
         public abstract void updateMarketOrderBook(string marketName, int depth);
         public abstract bool placeBuyLimitOrder(string marketName, decimal rate, decimal amount);
         public abstract bool placeSellLimitOrder(string marketName, decimal rate, decimal amount);
-        public abstract Dictionary<string, decimal> getBalances();
+        public abstract bool getBalances();
 
     }
 }

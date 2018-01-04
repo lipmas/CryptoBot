@@ -74,17 +74,21 @@ namespace CryptoBot.ExchangeApi.Poloniex {
             return api.placeSellOrder(marketName, rate, amount, false, false);
         }
 
-        public override Dictionary<string, decimal> getBalances() {
-            JObject res = api.getBalances();
-            var bal = new Dictionary<string, decimal>();
-            foreach(var kv in res) {
-                //if this is a supported coin
-                if(supportedCoins.Contains(kv.Key)) {
-                    bal.Add(kv.Key, (decimal)kv.Value);
-                    Console.WriteLine(kv.Key + " balance is: " + kv.Value);
+        public override bool getBalances() {
+            try {
+                JObject res = api.getBalances();
+                foreach(var kv in res) {
+                    //if this is a supported coin
+                    if(supportedCoins.Contains(kv.Key)) {
+                        balances.Add(kv.Key, (decimal)kv.Value);
+                        //Console.WriteLine(kv.Key + " balance is: " + kv.Value);
+                    }
                 }
+            return true;
+            } catch(PoloniexApiException e){
+                Console.WriteLine(e.Message);
+                return false;
             }
-            return bal;
         }
     }
 }

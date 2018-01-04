@@ -1,7 +1,7 @@
  namespace CryptoBot.Constants {
 
     public class TradingParameters {
-            //only trading pairs that are all included in supported coins
+            //only currency pairs that are all included in supported coins will be used by bot
             public static readonly string[] supportedCoins = {
                 "BTC",
                 "LTC",
@@ -10,18 +10,18 @@
                 "ZEC",
                 "XMR"
             };
-            
-            //toggle trading enabled
-             public const bool tradingEnabed = false;
 
-            //poll for market price updates
+            //toggle trading enabled
+             public const bool tradingEnabled = false;
+
+            //poll for market price updates in ms
             public const int marketPollRate = 5 * 1000;
 
-            //poll for order book updates
+            //poll for order book updates in ms
             public const int orderBookPollRate = 5 * 60 * 1000;
 
             /* 
-            Parameters used for support resistance calculations 
+             * Parameters used for support resistance calculations 
             */
             public const int orderBookDepth = 100;
 
