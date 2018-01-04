@@ -1,6 +1,7 @@
 # CryptoBot
 A WIP simple cryptocurrency trading bot as a c# console application
 
+After installing .NET SDK
 ```
 dotnet build
 dotnet run
