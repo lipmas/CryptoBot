@@ -10,23 +10,29 @@ using Newtonsoft.Json.Linq;
 using System.Security.Cryptography;
 
 using CryptoBot.Constants;
-using CryptoBot.Utility;
+using CryptoBot;
 
-namespace CryptoBot.ExchangeApi {
+namespace CryptoBot.ExchangeApi.Poloniex {
 
     public class PoloniexApiException : Exception {
         public PoloniexApiException(string msg) : base(msg){}
     }
 
+    /*
+     * Interacts with Poloniex's REST api
+     * Implements public data api calls using GET request
+     * Implements private/authenticated trade requests using POST request
+     * Currently only implements a small subset of the api requests
+     * TODO use Poloniex's push api through websockets to receive updates 
+     */
     public class PoloniexApi {
         public int nonce;
         public HMACSHA512 hmac;
-
         private string api_key;
         private string api_secret; 
 
         public PoloniexApi() {
-            //TODO store these password encrypted in a file instead of in plain text
+            //TODO these should be stored encrypted in a file instead of in plain text
             var secrets = Util.readKeyValuesFromFile(PoloniexConfig.secretsFile);
             api_secret = secrets["API_SECRET"];
             api_key = secrets["API_KEY"];
@@ -37,16 +43,11 @@ namespace CryptoBot.ExchangeApi {
             }
         }
 
-        public void test() {
-			getTickers();
-            getOrderBook("BTC_ETH", 10);
-            getBalances();
-        }
-
+        //Nonce is required monotonically increasing value that must be included
+        //Persist it to file so that the bot can recover latest nonce on restart
         public string getNonce() {
             var last_nonce = nonce;
             nonce++;
-            //persist current nonce to file
             File.WriteAllText(PoloniexConfig.nonceFile, "nonce=" + nonce.ToString());
             return last_nonce.ToString();
         }
@@ -79,7 +80,7 @@ namespace CryptoBot.ExchangeApi {
         private JObject makePrivateRequest(string command, Dictionary<string, string> args=null) {
             var request = WebRequest.Create(PoloniexConfig.poloniexApiPrivateBaseUrl);
 
-            //add command and nonce
+            //add command and nonce to every request
             string postData = "";
             postData += "command=" + command;
             postData += "&nonce=" + getNonce();
@@ -90,15 +91,13 @@ namespace CryptoBot.ExchangeApi {
             }
             var data = Encoding.ASCII.GetBytes(postData);
             var sig = Util.ByteArrayToString(hmac.ComputeHash(data));
-            Console.WriteLine(api_key);
-            Console.WriteLine(api_secret);
 
             request.Method = "POST";
             request.ContentType = "application/x-www-form-urlencoded";
             request.ContentLength = data.Length;
             request.Headers.Add("Key", api_key);
             request.Headers.Add("Sign", sig);
-            Console.WriteLine(postData);
+            //Console.WriteLine(postData);
 
             try {
                 using (var stream = request.GetRequestStream()) {
@@ -107,7 +106,7 @@ namespace CryptoBot.ExchangeApi {
                 var response = (HttpWebResponse)request.GetResponse();
                 var responseString = new StreamReader(response.GetResponseStream()).ReadToEnd();
                 JObject jsonObj = JObject.Parse(responseString);
-                Console.WriteLine(responseString);                
+                //Console.WriteLine(responseString);                
                 return jsonObj;
             }catch(Exception e) {
                 throw new PoloniexApiException("Private request failed: " + e.Message);
@@ -117,6 +116,7 @@ namespace CryptoBot.ExchangeApi {
         public JObject getBalances() {
             return makePrivateRequest("returnBalances");
         }
+
         public JObject getTickers() {
             string url = makeRequestUrl("returnTicker");
             var res = makePublicRequest(url);
@@ -135,5 +135,50 @@ namespace CryptoBot.ExchangeApi {
 			//Console.WriteLine(res);
 			return res;
 		}
+        public bool placeBuyOrder(string currencyPair, decimal rate, decimal amount, bool immediateOrCancel=false, bool postOnly=false) {
+            var args = new Dictionary<string, string> {
+                {"currencyPair", currencyPair},
+                {"rate", rate.ToString()},
+                {"amount", amount.ToString()},
+            };
+            if(immediateOrCancel){
+                args.Add("immeiateOrCancel","1");
+            }
+            if(postOnly){
+                args.Add("postOnly", "1");
+            }
+            var ret = makePrivateRequest("buy", args);
+
+            if(ret["error"] != null) {
+                Console.WriteLine("Error placing buy order: " + ret["error"]);
+                return false;
+            }
+            return true;
+        }
+
+        public bool placeSellOrder(string currencyPair, decimal rate, decimal amount, bool immediateOrCancel=false, bool postOnly=false) {
+            var args = new Dictionary<string, string> {
+                {"currencyPair", currencyPair},
+                {"rate", rate.ToString()},
+                {"amount", amount.ToString()},
+            };
+            if(immediateOrCancel){
+                args.Add("immeiateOrCancel","1");
+            }
+            if(postOnly){
+                args.Add("postOnly", "1");
+            }
+            var ret = makePrivateRequest("sell", args);
+            if(ret["error"] != null) {
+                Console.WriteLine("Error placing sell order: " + ret["error"]);
+                return false;
+            }
+            return true;
+        }
+        public void test() {
+            getTickers();
+            getOrderBook("BTC_ETH", 10);
+            getBalances();
+        }
     }
 }

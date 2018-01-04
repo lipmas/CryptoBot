@@ -1,17 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-//using System.Timers;
 
 using CryptoBot;
 using CryptoBot.ExchangeApi;
+using CryptoBot.ExchangeApi.Poloniex;
 using CryptoBot.Constants;
 
 class Program
 {
-    public static void Main(string[] args)
-    {
+    public static void Main(string[] args) {
         //testApi();
         var bot = new TradingBot();
         bot.start();

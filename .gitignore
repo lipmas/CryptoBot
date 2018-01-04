@@ -2,3 +2,4 @@ obj/
 bin/
 .vscode
 my_secrets.cfg
+last_nonce

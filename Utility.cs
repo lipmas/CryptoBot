@@ -3,7 +3,7 @@ using System.Text;
 using System.IO;
 using System.Collections.Generic;
 
-namespace CryptoBot.Utility {
+namespace CryptoBot {
     public class Util {
         public static string ByteArrayToString(byte[] ba) {
             StringBuilder hex = new StringBuilder(ba.Length * 2);
@@ -11,7 +11,6 @@ namespace CryptoBot.Utility {
                 hex.AppendFormat("{0:x2}", b);
             return hex.ToString();
             }
-
         public static Dictionary<string,string> readKeyValuesFromFile(string filePath) {
             string[] lines = File.ReadAllLines(filePath);
             var dict = new Dictionary<string,string>();
