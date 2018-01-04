@@ -7,8 +7,8 @@ using CryptoBot.ExchangeApi;
 namespace CryptoBot.TechnicalTradingStrategy {
     /*
      * Fetches historical trade data over some time period
-     * uses the high-low prices in this range and a technical analysis indicator of "fibonacci retracement levels"
-     * to determine a basis for support/resistance lines within and above the range
+     * uses the high-low prices in this range and the technical analysis indicator of fibonacci retracement levels
+     * to determine a basis for support/resistance lines
      */
     public class FibonacciSR : ITechnicalTradingStrategy {
         public void findSupportResistanceLevels(Exchange exch, string marketName, out decimal? support, out decimal? resistance) {
@@ -16,7 +16,6 @@ namespace CryptoBot.TechnicalTradingStrategy {
             var trades = exch.getHistoricalTrades(marketName);
             fibonacciSR(trades, out support, out resistance);
         }
-
         private void fibonacciSR(List<Trade> trades, out decimal? support, out decimal? resistance) {
             decimal currPrice = trades[trades.Count-1].price;
             decimal max = trades[0].price;
@@ -33,10 +32,6 @@ namespace CryptoBot.TechnicalTradingStrategy {
 
             //list of fibbonacci retracement levels
             decimal[] fibonacciLevels = {.23M, .38M, .61M, 1.00M, 1.61M, 2.61M};
-
-            Console.WriteLine("current price: " + currPrice);
-            Console.WriteLine("max is: " + max);
-            Console.WriteLine("min is: " + min);
 
             //determine which fibonacci support/resistance the current price is at
             //scaled to low-high range from historical data
