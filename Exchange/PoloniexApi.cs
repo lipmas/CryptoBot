@@ -19,18 +19,37 @@ namespace CryptoBot.Exchange {
     }
 
     public class PoloniexApi {
-        public int nonce = 1;
-        public HMACSHA512 hmac = new HMACSHA512(Encoding.UTF8.GetBytes(PoloniexConfig.secret));
+        public int nonce = 2;
+        public HMACSHA512 hmac;
 
-        public string getNonce() {
-            return nonce++.ToString();
+        private string api_key;
+        private string api_secret; 
+
+        public PoloniexApi() {
+            //TODO store these password encrypted in a file instead of in plain text
+            var secrets = Util.readKeyValuesFromFile(PoloniexConfig.secretsFile);
+            api_secret = secrets["API_SECRET"];
+            api_key = secrets["API_KEY"];
+            hmac = new HMACSHA512(Encoding.UTF8.GetBytes(api_secret));
+
+            if(File.Exists(PoloniexConfig.nonceFile)){
+                nonce =  Convert.ToInt32(Util.readKeyValuesFromFile(PoloniexConfig.nonceFile)["nonce"]);
+            }
         }
+
         public void test() {
-			//getTickers();
-            //getOrderBook("BTC_ETH", 10);
+			getTickers();
+            getOrderBook("BTC_ETH", 10);
             getBalances();
         }
-
+        
+        public string getNonce() {
+            var last_nonce = nonce;
+            nonce++;
+            //persist current nonce to file
+            File.WriteAllText(PoloniexConfig.nonceFile, "nonce=" + nonce.ToString());
+            return last_nonce.ToString();
+        }
         private string makeRequestUrl(string command, Dictionary<string, string> args=null) {
             string url = PoloniexConfig.poloniexApiPublicBaseUrl;
             url += "?command=" + command;
@@ -71,13 +90,15 @@ namespace CryptoBot.Exchange {
             }
             var data = Encoding.ASCII.GetBytes(postData);
             var sig = Util.ByteArrayToString(hmac.ComputeHash(data));
-            //Console.WriteLine(sig);
+            Console.WriteLine(api_key);
+            Console.WriteLine(api_secret);
 
             request.Method = "POST";
             request.ContentType = "application/x-www-form-urlencoded";
             request.ContentLength = data.Length;
-            request.Headers.Add("Key", PoloniexConfig.apiKey);
+            request.Headers.Add("Key", api_key);
             request.Headers.Add("Sign", sig);
+            Console.WriteLine(postData);
 
             try {
                 using (var stream = request.GetRequestStream()) {
@@ -86,15 +107,15 @@ namespace CryptoBot.Exchange {
                 var response = (HttpWebResponse)request.GetResponse();
                 var responseString = new StreamReader(response.GetResponseStream()).ReadToEnd();
                 JObject jsonObj = JObject.Parse(responseString);
-                //Console.WriteLine(responseString);                
+                Console.WriteLine(responseString);                
                 return jsonObj;
             }catch(Exception e) {
                 throw new PoloniexApiException("Private request failed: " + e.Message);
             }
         }
 
-        public void getBalances() {
-            makePrivateRequest("returnBalances");
+        public JObject getBalances() {
+            return makePrivateRequest("returnBalances");
         }
         public JObject getTickers() {
             string url = makeRequestUrl("returnTicker");
