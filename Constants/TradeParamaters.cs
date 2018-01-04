@@ -20,9 +20,12 @@
             //poll for order book updates in ms
             public const int orderBookPollRate = 5 * 60 * 1000;
 
-            /* 
-             * Parameters used for support resistance calculations 
-            */
+    }
+
+    /* 
+     * Parameters used for order book support resistance calculations 
+     */
+    public class OrderBookSRParams {
             public const int orderBookDepth = 100;
 
             //number of slices to divide the orderbook into when aggregating
@@ -33,5 +36,12 @@
 
             //how much bigger is this agg qty level than average on the order book
             public const decimal levelThreshold = 1M;          
+        }
+
+        public class HistoricalSRParams {
+
+            //time window in seconds to view historical price
+            public const int lookBackPeriod = 6*60*60; //6hr
+
         }
  }

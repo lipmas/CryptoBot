@@ -10,14 +10,20 @@ namespace CryptoBot.TechnicalTradingStrategy  {
      * uses some parameterized heuristics to determine which price if any may be a support/resistance level
      * this is very simple strategy that doesnt take into account fast changing order books and is unlikely to be profitable
     */
-    public class OrderBookSupportResistance : ITechnicalTradingStrategy {
-        public decimal? findSupportLevel(Exchange exch, string marketName) {
-            exch.updateMarketOrderBook(marketName, TradingParameters.orderBookDepth);
+    public class OrderBookSR : ITechnicalTradingStrategy {
+
+        public void findSupportResistanceLevels(Exchange exch, string marketName, out decimal? support, out decimal? resistance) {
+            support = findSupportLevel(exch, marketName);
+            resistance = findResistanceLevel(exch, marketName);
+        }
+
+        private decimal? findSupportLevel(Exchange exch, string marketName) {
+            exch.updateMarketOrderBook(marketName, OrderBookSRParams.orderBookDepth);
             //reverse the list because bids are presorted by largest->smallest
             var bids = exch.getMarket(marketName).bids;
             List<Quote> reverseBids = new List<Quote>(bids);
             reverseBids.Reverse();
-            var consolidatedQuotes = consolidateOrderBook(reverseBids, TradingParameters.aggSize);
+            var consolidatedQuotes = consolidateOrderBook(reverseBids, OrderBookSRParams.aggSize);
 
             //find the largest qty bucket in the order book
             int maxIndex = 0;
@@ -25,7 +31,7 @@ namespace CryptoBot.TechnicalTradingStrategy  {
             for(int i=0; i<consolidatedQuotes.Count; ++i){
                 if(consolidatedQuotes[i].qty > maxQty){
                     //but only if this is far enough away from the current market price to be worth targeting
-                    if(i >= TradingParameters.aggSize - TradingParameters.awayFromMarketThreshold){
+                    if(i >= OrderBookSRParams.aggSize - OrderBookSRParams.awayFromMarketThreshold){
                         continue;
                     }
                     maxQty = consolidatedQuotes[i].qty;
@@ -39,17 +45,17 @@ namespace CryptoBot.TechnicalTradingStrategy  {
             }
             var averageQty = sum / consolidatedQuotes.Count;
             //check if this qty is significantly higher in this bucket than average 
-            if( (consolidatedQuotes[maxIndex].qty - averageQty) / averageQty < TradingParameters.levelThreshold) {
+            if( (consolidatedQuotes[maxIndex].qty - averageQty) / averageQty < OrderBookSRParams.levelThreshold) {
                 return null;
             }
             //consolidatedQuotes[maxIndex].printDetails();
             return consolidatedQuotes[maxIndex].price;;
         }
 
-        public decimal? findResistanceLevel(Exchange exch, string marketName) {
-            exch.updateMarketOrderBook(marketName, TradingParameters.orderBookDepth);
+        private decimal? findResistanceLevel(Exchange exch, string marketName) {
+            exch.updateMarketOrderBook(marketName, OrderBookSRParams.orderBookDepth);
             var asks = exch.getMarket(marketName).asks;
-            var consolidatedQuotes = consolidateOrderBook(asks, TradingParameters.aggSize);
+            var consolidatedQuotes = consolidateOrderBook(asks, OrderBookSRParams.aggSize);
 
             //find the largest qty bucket in the aggregated order book
             int maxIndex = 0;
@@ -57,7 +63,7 @@ namespace CryptoBot.TechnicalTradingStrategy  {
             for(int i=0; i<consolidatedQuotes.Count; ++i){
                 if(consolidatedQuotes[i].qty > maxQty) {
                     //but only if this is far enough away from the current market price to be worth targeting
-                    if(i < TradingParameters.awayFromMarketThreshold) {                  
+                    if(i < OrderBookSRParams.awayFromMarketThreshold) {                  
                         continue;
                     }
                     maxQty = consolidatedQuotes[i].qty;
@@ -71,7 +77,7 @@ namespace CryptoBot.TechnicalTradingStrategy  {
             }
             var averageQty = sum / consolidatedQuotes.Count;
             //check if this qty is significantly higher in this bucket than average 
-            if( (consolidatedQuotes[maxIndex].qty - averageQty) / averageQty < TradingParameters.levelThreshold) {
+            if( (consolidatedQuotes[maxIndex].qty - averageQty) / averageQty < OrderBookSRParams.levelThreshold) {
                 return null;
             }
             //consolidatedQuotes[maxIndex].printDetails();

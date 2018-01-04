@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-using CryptoBot;
+using CryptoBot.Bots;
 using CryptoBot.ExchangeApi;
 using CryptoBot.ExchangeApi.Poloniex;
 using CryptoBot.TechnicalTradingStrategy;
@@ -10,17 +10,24 @@ using CryptoBot.Constants;
 class Program
 {
     public static void Main(string[] args) {
-        var exchange = new PoloniexExchange(new List<string>(TradingParameters.supportedCoins));
-        var strategy = new OrderBookSupportResistance();
-        var bot = new TechnicalTradingBot(exchange, strategy);
-        bot.start();
-        Console.ReadKey();
 
-        //can run other bots on other exchanges or using other strategies...
-    }
+        var poloniexExchange = new PoloniexExchange(new List<string>(TradingParameters.supportedCoins));
 
-    public static void testApi() {
-        PoloniexApi api = new PoloniexApi();
-        api.test();
+        /*
+        var orderBookStrategy = new OrderBookSR();
+        var bot1 = new TechnicalTradingBot(poloniexExchange, orderBookStrategy);
+        bot1.start();
+        */
+
+        var fibonaciiStrategy = new FibonacciSR();
+        var bot2 = new TechnicalTradingBot(poloniexExchange, fibonaciiStrategy);
+        bot2.start();
+
+        // can extend this by creating new types of bots
+        // that can run on other exchanges
+        // or are using other types of trading strategies...
+
+        //wait for user input to terminate bot
+        Console.ReadKey();        
     }
 }

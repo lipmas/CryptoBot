@@ -21,7 +21,7 @@ namespace CryptoBot.ExchangeApi.Poloniex {
             getSupportedMarkets();
         }
 
-        public override void getTradeHistory(string marketName, int secondsBack) {
+        public override void updateTradeHistory(string marketName, int secondsBack) {
             var currentTime = DateTime.UtcNow;
             var end = Util.getUnixTimestamp(currentTime);
             var start = end - secondsBack;
@@ -35,9 +35,11 @@ namespace CryptoBot.ExchangeApi.Poloniex {
                 //trade.printDetails();
                 trades.Add(trade);
             }
-            tradeHistory.historicalTrades = trades;
-            tradeHistory.startTime = start;
-            tradeHistory.endTime = end;
+            var hist = new TradeHistory();
+            hist.historicalTrades = trades;
+            hist.startTime = start;
+            hist.endTime = end;
+            tradeHistories[marketName] = hist;
         }
 
         public override void updateMarketPrices() {

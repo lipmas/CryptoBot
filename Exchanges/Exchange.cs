@@ -12,7 +12,7 @@ namespace CryptoBot.ExchangeApi {
         protected List<String> supportedCoins;
         protected Dictionary<string, Market> markets =  new Dictionary<string, Market>();
         protected List<string> marketNames = new List<string>();
-        protected TradeHistory tradeHistory = new TradeHistory();
+        protected Dictionary<string, TradeHistory> tradeHistories = new Dictionary<string, TradeHistory>();
         protected Dictionary<string, decimal> balances;
 
         public Exchange(string name) {
@@ -20,6 +20,9 @@ namespace CryptoBot.ExchangeApi {
         }
         public List<string> getMarketNames() {
             return marketNames;
+        }
+        public List<Trade> getHistoricalTrades(string marketName){
+            return tradeHistories[marketName].historicalTrades;
         }
         public Market getMarket(string name) {
             return markets[name];
@@ -41,7 +44,7 @@ namespace CryptoBot.ExchangeApi {
         //specific exchanges must implement these data updates through the appropriate API calls
         public abstract void updateMarketPrices();
         public abstract void updateMarketOrderBook(string marketName, int depth);
-        public abstract void getTradeHistory(string marketName, int secondsBack);
+        public abstract void updateTradeHistory(string marketName, int secondsBack);
         public abstract bool placeBuyLimitOrder(string marketName, decimal rate, decimal amount);
         public abstract bool placeSellLimitOrder(string marketName, decimal rate, decimal amount);
         public abstract bool getBalances();
