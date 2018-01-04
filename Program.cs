@@ -1,21 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
-using CryptoBot.Exchange;
-using CryptoBot.Constants;
+using System.Threading;
+using System.Threading.Tasks;
+//using System.Timers;
 
-using Newtonsoft.Json.Linq;
+using CryptoBot;
+using CryptoBot.ExchangeApi;
+using CryptoBot.Constants;
 
 class Program
 {
     public static void Main(string[] args)
     {
-        var supportedTickers = new List<string>() {"BTC", "ETH", "LTC"};
-        testApi();
+        //testApi();
+        var bot = new TradingBot();
+        bot.start();
+        Console.ReadKey();
     }
 
     public static void testApi() {
-         PoloniexApi api = new PoloniexApi();
-        //JObject bal = api.getBalances();
+        PoloniexApi api = new PoloniexApi();
         api.test();
     }
 }

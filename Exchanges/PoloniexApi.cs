@@ -12,14 +12,14 @@ using System.Security.Cryptography;
 using CryptoBot.Constants;
 using CryptoBot.Utility;
 
-namespace CryptoBot.Exchange {
+namespace CryptoBot.ExchangeApi {
 
     public class PoloniexApiException : Exception {
         public PoloniexApiException(string msg) : base(msg){}
     }
 
     public class PoloniexApi {
-        public int nonce = 2;
+        public int nonce;
         public HMACSHA512 hmac;
 
         private string api_key;
@@ -42,7 +42,7 @@ namespace CryptoBot.Exchange {
             getOrderBook("BTC_ETH", 10);
             getBalances();
         }
-        
+
         public string getNonce() {
             var last_nonce = nonce;
             nonce++;
@@ -120,7 +120,7 @@ namespace CryptoBot.Exchange {
         public JObject getTickers() {
             string url = makeRequestUrl("returnTicker");
             var res = makePublicRequest(url);
-            Console.WriteLine(res);
+            //Console.WriteLine(res);
             return res;
         }
 
@@ -132,7 +132,7 @@ namespace CryptoBot.Exchange {
             string url = makeRequestUrl("returnOrderBook", args);
 
 			var res = makePublicRequest(url);
-			Console.WriteLine(res);
+			//Console.WriteLine(res);
 			return res;
 		}
     }
