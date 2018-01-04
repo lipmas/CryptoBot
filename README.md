@@ -18,7 +18,7 @@ Should start the bot running the default fibonacci support/resistance strategy
 - Only console trace of potential buys/sell opportunities will appear for now
 - Can modify trading parameters [here](https://github.com/lipmas/CryptoBot/blob/master/Constants/TradeParamaters.cs)
 
-## Running with mock trading enabled
+## Running with Poloniex trading API enabled
 - Must currently set tradingEnabled to true in trading parameters
 - Must replace secrets.cfg file with your Poloniex secret key and api key
 - This is required for making any authenticated API requests to poloniex including to see your balances
