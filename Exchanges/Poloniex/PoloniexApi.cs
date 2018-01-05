@@ -156,7 +156,7 @@ namespace CryptoBot.ExchangeApi.Poloniex {
                 {"amount", amount.ToString()},
             };
             if(immediateOrCancel){
-                args.Add("immeiateOrCancel","1");
+                args.Add("immediateOrCancel","1");
             }
             if(postOnly){
                 args.Add("postOnly", "1");
@@ -177,7 +177,7 @@ namespace CryptoBot.ExchangeApi.Poloniex {
                 {"amount", amount.ToString()},
             };
             if(immediateOrCancel){
-                args.Add("immeiateOrCancel","1");
+                args.Add("immediateOrCancel","1");
             }
             if(postOnly){
                 args.Add("postOnly", "1");
